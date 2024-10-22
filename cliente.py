@@ -20,14 +20,14 @@ while True:
     msg_to_send = str(random_integer_to_send)
     print("Numero randomico gerado enviado para o server: " + msg_to_send)
 
-    client.sendto(msg_to_send.encode(), ("localhost", 12345))
+    client.sendto(msg_to_send.encode(), ("177.37.173.165", 12345))
     msg_received_bytes, address_ip_server = client.recvfrom(2048)
     msg_received_str = msg_received_bytes.decode()
     print("Mensagem recebida do cliente: "+msg_received_str)
 
     msg_to_send = msg_received_str + " FIM "
     print("Mensagem enviada para o server:" + msg_to_send)
-    client.sendto(msg_to_send.encode(), ("localhost", 12345))
+    client.sendto(msg_to_send.encode(), ("177.37.173.165", 12345))
 
     #fecha o socket e dá um delay de 30seg
     client.close()
