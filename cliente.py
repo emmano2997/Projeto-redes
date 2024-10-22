@@ -5,7 +5,7 @@ def cliente_udp(server_ip, port):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     # Mensagem a ser enviada
-    message = 'Olá do cliente!'
+    message = "Olá do cliente!"
     
     # Envia a mensagem ao servidor
     client_socket.sendto(message, (server_ip, port))
