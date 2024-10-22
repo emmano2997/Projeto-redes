@@ -1,7 +1,7 @@
 import socket
 
-UDP_IP = "127.0.0.1" #teste local "15.228.191.109"
-UDP_PORT = 50000
+UDP_IP = "177.37.173.165" #teste local "15.228.191.109"
+UDP_PORT = 5010
 
 sock = socket.socket(socket.AF_INET, # Internet
                      socket.SOCK_DGRAM) # UDP
