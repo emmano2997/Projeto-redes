@@ -1,21 +1,18 @@
 import socket
 
-def servidor_udp(port):
-    # Cria um socket UDP
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+# Criar um socket UDP
+servidor_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+# Definir endereço e porta
+endereco = ('0.0.0.0', 12345)  # Escutar em todas as interfaces na porta 12345
+servidor_socket.bind(endereco)
+
+print("Servidor UDP aguardando mensagens...")
+
+while True:
+    # Receber dados
+    dados, cliente_endereco = servidor_socket.recvfrom(1024)  # Buffer de 1024 bytes
+    print(f"Recebido de {cliente_endereco}: {dados.decode('utf-8')}")  # Decodificando de bytes para string
     
-    # Associa o socket a um endereço e porta
-    server_socket.bind(('', port))
-    print(f'Servidor UDP ouvindo na porta {port}')
-
-    while True:
-        # Recebe dados do cliente
-        data, addr = server_socket.recvfrom(1024)
-        print(f'Recebido {data} de {addr}')
-        
-        # Envia uma resposta ao cliente
-        response = 'Olá do servidor!'
-        server_socket.sendto(response, addr)
-
-if __name__ == '__main__':
-    servidor_udp(12345)  # Substitua 12345 pela porta desejada
+    # Responder ao cliente
+    servidor_socket.sendto(b'Mensagem recebida!', cliente_endereco)

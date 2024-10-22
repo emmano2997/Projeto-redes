@@ -1,20 +1,18 @@
 import socket
 
-def cliente_udp(server_ip, port):
-    # Cria um socket UDP
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+#Criar um socket UDP
+cliente_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    # Mensagem a ser enviada
-    message = "Olá do cliente!"
-    
-    # Envia a mensagem ao servidor
-    client_socket.sendto(message, (server_ip, port))
-    print(f'Mensagem enviada para {server_ip}:{port}')
+#Definir o endereço do servidor
+endereco_servidor = ('187.64.55.75', 12345)  # Substitua <IP_DO_SERVIDOR> pelo IP do computador servidor
 
-    # Recebe resposta do servidor
-    data, addr = client_socket.recvfrom(1024)
-    print(f'Resposta recebida: {data} de {addr}')
+#Enviar uma mensagem
+mensagem = 'Olá, servidor!'.encode('utf-8')  # Codificando para bytes
+cliente_socket.sendto(mensagem, endereco_servidor)
 
-if __name__ == '__main__':
-    servidor_ip = '187.64.55.75'  # Substitua pelo IP público do servidor
-    cliente_udp(servidor_ip, 12345)  # Use a mesma porta do servidor
+#Receber resposta
+dados,  = cliente_socket.recvfrom(1024)
+print(f"Recebido do servidor: {dados.decode('utf-8')}")  # Decodificando a resposta
+
+#Fechar o socket
+cliente_socket.close()
