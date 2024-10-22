@@ -12,7 +12,7 @@ print("Servidor UDP aguardando mensagens...")
 while True:
     # Receber dados
     dados, cliente_endereco = servidor_socket.recvfrom(1024)  # Buffer de 1024 bytes
-    print(f"Recebido de {cliente_endereco}: {dados.decode('utf-8')}")  # Decodificando de bytes para string
+    print(f"Recebido de {cliente_endereco}: {dados.decode('utf-8')}")
     
     # Responder ao cliente
     servidor_socket.sendto(b'Mensagem recebida!', cliente_endereco)
