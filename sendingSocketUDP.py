@@ -1,4 +1,6 @@
 import socket
+import datetime
+agora = datetime.datetime.now()
 
 UDP_IP = "127.0.0.1" #teste local "15.228.191.109"
 UDP_PORT = 50000
