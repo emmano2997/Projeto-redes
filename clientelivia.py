@@ -11,17 +11,17 @@ def show_menu():
 
 client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-server_address = ("187.64.55.75", 12345)  # Coloque o IP público do servidor aqui
+server_address = ("127.0.0.1", 12345)  # Coloque o IP público do servidor aqui
 
 while True:
     option = show_menu()
 
+    # Envia a opção escolhida para o servidor
+    client.sendto(str(option).encode(), server_address)
+
     if option == 4:
         print('Saindo...')
         break
-
-    # Envia a opção escolhida para o servidor
-    client.sendto(str(option).encode(), server_address)
 
     # Recebe a resposta do servidor
     msg_received_bytes, address_ip_server = client.recvfrom(2048)

@@ -28,7 +28,9 @@ while True:
     elif option == 2:
         response = get_motivational_message()
     elif option == 3:
-        response = f"O servidor respondeu {response_count} vezes até agora."
+        response = f"{response_count}"
+    elif option ==4:
+        break
     else:
         response = "Opção inválida."
 
