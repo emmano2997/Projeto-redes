@@ -29,7 +29,7 @@ while True:
         response = get_motivational_message()
     elif option == 3:
         response = f"{response_count}"
-    elif option ==4:
+    elif option == 4:
         break
     else:
         response = "Opção inválida."
