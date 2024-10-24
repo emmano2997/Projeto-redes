@@ -1,45 +1,40 @@
 import socket
-import math
-import random
-import string
+import time
 
-# função pra gerar uma string aleatória de tamanho específico
-def random_str(chars = string.ascii_letters + string.digits, str_length = 10):
-    return ''.join(random.choice(chars) for _ in range(str_length))
+# Função para obter a data e hora formatadas
+def get_current_time():
+    current_time = time.localtime()
+    return time.strftime("%a %b %d %H:%M:%S %Y", current_time)
 
-#AF_INET indica que é um protocolo de endereço IP
-#SOCK_DGRAM indica que é um protocolo de transporte UDP
+# Função para enviar mensagem motivacional
+def get_motivational_message():
+    return "Seja forte!"
+
+# Inicializa o socket UDP
 server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-server.bind(("", 12345)) # "" é localhost
+server.bind(("", 12345))  # "" significa que o servidor escuta em todas as interfaces
+
+# Contador de respostas emitidas pelo servidor
+response_count = 0
+
+print("Esperando por clientes...")
 
 while True:
-    msg_to_answer = ""
-    msg_received_str = ""
-
-    print("Esperando por clientes...")
-    msg_bytes, address_ip_client = server.recvfrom(248) #248 bytes
-    msg_received_str = msg_bytes.decode()
-    msg_received_int = int(msg_received_str)
-
-    if msg_received_str != "":
-        integer_legth = int(math.log10(msg_received_int))+1
-        print("Número recebido do cliente: " + str(msg_received_int) +
-            " | Ip do Cliente: " + str(address_ip_client)+
-            " | Tamanho do numero recebido do cliente: " + str(integer_legth))
-
-    if integer_legth >= 10:
-        msg_to_answer = random_str(str_length = integer_legth)
-
-    elif integer_legth < 10:
-        if(msg_received_int % 2) == 0:
-            msg_to_answer = "PAR"
-    else:
-        msg_to_answer = "IMPAR"
-
-    server.sendto(msg_to_answer.encode(), address_ip_client)
-    print("Mensagem enviada para o cliente: " + msg_to_answer)
-
     msg_bytes, address_ip_client = server.recvfrom(248)
-    msg_received_str = msg_bytes.decode()
-    print("Mensagem recebida do clinete: " + msg_received_str)
-    print("#"*67) #separador pro consolelog
+    option = int(msg_bytes.decode())
+
+    if option == 1:
+        response = get_current_time()
+    elif option == 2:
+        response = get_motivational_message()
+    elif option == 3:
+        response = f"{response_count}"
+    elif option == 4:
+        break
+    else:
+        response = "Opção inválida."
+
+    # Envia a resposta ao cliente
+    server.sendto(response.encode(), address_ip_client)
+    response_count += 1
+    print(f"Resposta enviada para {address_ip_client}: {response}")

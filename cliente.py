@@ -1,36 +1,32 @@
 import socket
-import random
 import time
 
-def get_random_number(begin_number, number_of_decimal_places):
-    random_integer = random.randrange(begin_number, ((10 ** number_of_decimal_places) -1))
-    return random_integer
+# Função para exibir o menu e obter a escolha do usuário
+def show_menu():
+    print("1. Data e hora atual;")
+    print("2. Uma mensagem motivacional para o fim do semestre;")
+    print("3. A quantidade de respostas emitidas pelo servidor até o momento.")
+    print("4. Sair")
+    return int(input("Escolha uma opção: "))
+
+client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+server_address = ("127.0.0.1", 12345)  # Coloque o IP público do servidor aqui, 127.0.0.1 ip da maquina local 
 
 while True:
-    msg_to_send = ""
-    msg_received_str = ""
+    option = show_menu()
 
-    client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    # Envia a opção escolhida para o servidor
+    client.sendto(str(option).encode(), server_address)
 
-    random_integer_to_send = get_random_number(
-        begin_number=1,
-        number_of_decimal_places=random.randrange(1,30)
-    )
+    if option == 4:
+        print('Saindo...')
+        break
 
-    msg_to_send = str(random_integer_to_send)
-    print("Numero randomico gerado enviado para o server: " + msg_to_send)
-
-    client.sendto(msg_to_send.encode(), ("177.37.173.165", 12345))
+    # Recebe a resposta do servidor
     msg_received_bytes, address_ip_server = client.recvfrom(2048)
     msg_received_str = msg_received_bytes.decode()
-    print("Mensagem recebida do cliente: "+msg_received_str)
 
-    msg_to_send = msg_received_str + " FIM "
-    print("Mensagem enviada para o server:" + msg_to_send)
-    client.sendto(msg_to_send.encode(), ("177.37.173.165", 12345))
+    print("Resposta do servidor:", msg_received_str)
 
-    #fecha o socket e dá um delay de 30seg
-    client.close()
-    for i in range(30):
-        print(str(i+1)+ "seg...")
-    time.sleep(1)
+client.close()
