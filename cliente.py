@@ -11,7 +11,7 @@ def show_menu():
 
 client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-server_address = ("187.64.55.75", 12345)  # Coloque o IP público do servidor aqui, 127.0.0.1 ip da maquina local 
+server_address = ("187.64.55.75", 50000)  # Coloque o IP público do servidor aqui, 127.0.0.1 ip da maquina local 
 
 while True:
     option = show_menu()
