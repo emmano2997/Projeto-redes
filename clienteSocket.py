@@ -45,28 +45,23 @@ def send_request_and_receive_response(tipo):
         except socket.timeout:
             print("Tempo esgotado. Nenhuma resposta recebida do servidor.")
 
-# Menu para o usuário selecionar a opção desejada
-def main():
-    while True:
-        print("Escolha o tipo de requisição:")
-        print("1. Data e hora atual")
-        print("2. Mensagem motivacional para o fim do semestre")
-        print("3. Quantidade de respostas emitidas pelo servidor")
-        print("4. Sair")
-        
-        opcao = input("Digite a sua escolha: ")
+while True:
+    print("Escolha o tipo de requisição:")
+    print("1. Data e hora atual")
+    print("2. Mensagem motivacional para o fim do semestre")
+    print("3. Quantidade de respostas emitidas pelo servidor")
+    print("4. Sair")
+    
+    opcao = input("Digite a sua escolha: ")
 
-        if opcao == '1':
-            send_request_and_receive_response(0)
-        elif opcao == '2':
-            send_request_and_receive_response(1)
-        elif opcao == '3':
-            send_request_and_receive_response(2)
-        elif opcao == '4':
-            print("Saindo...")
-            break
-        else:
-            print("Opção inválida, tente novamente.")
-
-if __name__ == "__main__":
-    main()
+    if opcao == '1':
+        send_request_and_receive_response(0)
+    elif opcao == '2':
+        send_request_and_receive_response(1)
+    elif opcao == '3':
+        send_request_and_receive_response(2)
+    elif opcao == '4':
+        print("Saindo...")
+        break
+    else:
+        print("Opção inválida, tente novamente.")
