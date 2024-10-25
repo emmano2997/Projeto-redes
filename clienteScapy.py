@@ -7,7 +7,7 @@ payload = b'\x02\x5C\xE1'  # payload de 3 bytes
 # 0x025CE1 (req da quant de respostas enviadas pelo server, com id 23777)
 
 # cabeçalho IP
-ip_header = IP(src = '187.64.55.75', dst = '15.228.191.109')
+ip_header = IP(src = '187.64.55.75', dst = '15.228.191.109', len=8 + len(payload), chksum=0)
 
 # cabeçalho UDP
 udp_header = UDP(sport = org_port, dport = dest_port)
