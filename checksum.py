@@ -1,12 +1,18 @@
-from scapy.all import IP, UDP, send, Raw, bytes
+from scapy.all import IP, UDP, send, Raw
 
 # Função para calcular o checksum UDP com wraparound
 def calculate_udp_checksum(src_ip, dst_ip, udp_header, udp_payload):
     # Cabeçalho Pseudo
-    pseudo_header = bytes(src_ip) + bytes(dst_ip) + bytes([0, 17]) + (len(udp_header) + len(udp_payload)).to_bytes(2, 'big')
+    # Converte IPs de origem e destino em bytes
+    pseudo_header = (
+        bytes([src_ip[0], src_ip[1], src_ip[2], src_ip[3]]) + 
+        bytes([dst_ip[0], dst_ip[1], dst_ip[2], dst_ip[3]]) +
+        bytes([0, 17]) +  # 0 e 17 (número do protocolo UDP)
+        (len(udp_header) + len(udp_payload)).to_bytes(2, 'big')  # Comprimento do segmento UDP
+    )
     
     # Dados para o checksum
-    checksum_data = pseudo_header + udp_header + udp_payload
+    checksum_data = pseudo_header + udp_header.build() + udp_payload
 
     # Ajusta para 16 bits
     total = 0
