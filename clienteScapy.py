@@ -1,4 +1,6 @@
 from scapy.all import IP, UDP, send, Raw
+import random
+import struct
 
 # definindo as portas
 org_port = 12345   # porta de origem
@@ -10,8 +12,10 @@ payload = b'\x02\x5C\xE1'  # payload de 3 bytes
 ip_header = IP(src = '187.64.55.75', dst = '15.228.191.109')
 
 # cabeçalho UDP
-udp_header = UDP(sport = org_port, dport = dest_port, len=8 + len(payload), chksum=0)
+udp_header = UDP(sport = org_port, dport = dest_port, len = 8 + len(payload), chksum=0)
 # porta de origem, porta de destino, comprimento do segmento (8 + 3 de payload), checksum que inicia 0
+
+
 
 # pacote
 packet = ip_header / udp_header / Raw(load = payload)# '/' -> concatenação de camadas do pacotes
