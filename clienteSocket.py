@@ -14,17 +14,9 @@ def create_request(tipo, identificador):
     request_byte_2 = identificador & 0xFF  # Parte baixa do identificador
     return bytes([request_byte_0, request_byte_1, request_byte_2])
 
-# Função para calcular o checksum (para o cabeçalho UDP)
-def calculate_checksum(header):
-    total = 0
-    for i in range(0, len(header), 2):
-        total += (header[i] << 8) + (header[i + 1])
-    while (total >> 16):
-        total = (total & 0xFFFF) + (total >> 16)
-    return ~total & 0xFFFF
-
 # Função para criar o cabeçalho UDP
-def create_udp_header(src_port, dest_port, length, checksum):
+def create_udp_header(src_port, dest_port, length):
+    checksum = 0  # Checksum definido como 0
     return struct.pack('!HHHH', src_port, dest_port, length, checksum)
 
 # Função para enviar requisição e receber resposta
@@ -34,32 +26,18 @@ def send_request_and_receive_response(tipo):
 
     # Cabeçalho UDP
     src_port = random.randint(1024, 65535)  # Porta de origem aleatória
-    dest_port = SERVER_PORT                   # Porta de destino
-    length = 8 + len(request)                 # Comprimento do cabeçalho UDP + payload
-    checksum = 0  # Inicialmente 0, será recalculado
+    dest_port = SERVER_PORT                  # Porta de destino
+    length = 8 + len(request)                # Comprimento do cabeçalho UDP + payload
 
     # Cria o cabeçalho UDP
-    udp_header = create_udp_header(src_port, dest_port, length, checksum)
-
-    # Pseudo-cabeçalho para calcular o checksum
-    src_ip = socket.inet_aton(SOURCE_IP)
-    dest_ip = socket.inet_aton(SERVER_IP)
-    zero = 0
-    protocol = 17  # 17 para UDP
-    pseudo_header = struct.pack('!4s4sBBH', src_ip, dest_ip, zero, protocol, length)
-
-    # Calcula o checksum
-    checksum = calculate_checksum(pseudo_header + udp_header + request)
-
-    # Cria o cabeçalho UDP final com o checksum correto
-    udp_header = create_udp_header(src_port, dest_port, length, checksum)
+    udp_header = create_udp_header(src_port, dest_port, length)
 
     # Combina o cabeçalho UDP e o payload
     packet = udp_header + request
 
     # Cria o socket UDP
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-        sock.settimeout(5)  # Timeout de 5 segundos
+        sock.settimeout(15)  # Timeout de 15 segundos
         # Envia a requisição para o servidor
         sock.sendto(packet, (SERVER_IP, SERVER_PORT))
         print(f"Requisição enviada: Tipo {tipo}, Identificador {identificador}")
@@ -73,7 +51,11 @@ def send_request_and_receive_response(tipo):
             tipo_resposta = (response[0] >> 4) & 0x0F  # 4 bits de req/res
             identificador_resposta = (response[1] << 8) | response[2]
             tamanho_resposta = response[3]
-            resposta_texto = response[4:4+tamanho_resposta].decode('ascii')
+
+            try:
+                resposta_texto = response[4:4+tamanho_resposta].decode('ascii')
+            except UnicodeDecodeError:
+                resposta_texto = "<Ops, erro de decodificação>"
 
             print(f"Tipo de resposta: {tipo_resposta}")
             print(f"Identificador de resposta: {identificador_resposta}")
