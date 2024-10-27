@@ -1,10 +1,12 @@
 from scapy.all import IP, UDP, Raw, sr1
 import random
+import struct
+import socket
 
 # Configura o IP e a porta do servidor
 SERVER_IP = '15.228.191.109'
 SERVER_PORT = 50000
-SOURCE_IP = '177.37.173.165' 
+SOURCE_IP = '177.37.172.164' 
 org_port = 12345  # Porta de origem
 
 
@@ -19,6 +21,37 @@ def create_request(tipo):
     request_byte_1 = (identificador >> 8) & 0xFF  # Parte alta do identificador
     request_byte_2 = identificador & 0xFF  # Parte baixa do identificador
     return bytes([request_byte_0, request_byte_1, request_byte_2]), identificador
+
+def criar_pseudocabecalho(ip_origem, ip_destino, protocolo, tamanho_udp):
+    # Converter os endereços IP de string para bytes
+    ip_origem_bytes = socket.inet_aton(ip_origem)
+    ip_destino_bytes = socket.inet_aton(ip_destino)
+    
+    # Criar o pseudocabeçalho
+    pseudocabecalho = (
+        ip_origem_bytes +
+        ip_destino_bytes +
+        struct.pack('!BBH', 0, protocolo, tamanho_udp)
+    )
+    
+    return pseudocabecalho
+
+
+def calcular_checksum(data):
+    # Adicionar padding se a quantidade de bytes for ímpar
+    if len(data) % 2 == 1:
+        data += b'\x00'
+
+    # Soma os 16 bits
+    total = 0
+    for i in range(0, len(data), 2):
+        word = (data[i] << 8) + data[i + 1]
+        total += word
+        # Wraparound
+        total = (total & 0xFFFF) + (total >> 16)
+    
+    # Complemento de 1
+    return ~total & 0xFFFF
 
 def send_request_and_receive_response(tipo):
     # Envia a mensagem e retorna a resposta do servidor
