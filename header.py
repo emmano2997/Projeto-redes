@@ -5,7 +5,7 @@ import random
 # Definições de IP e porta do servidor
 SERVER_IP = '15.228.191.109'
 SERVER_PORT = 50000
-SOURCE_IP = '177.37.172.164'  # IP de origem do cliente
+SOURCE_IP = '177.37.173.16'  # IP de origem do cliente
 
 # Função para criar uma mensagem de requisição
 def create_request(tipo, identificador):
@@ -85,9 +85,10 @@ def send_request_and_receive_response(tipo):
         tamanho_resposta = resposta[3]
 
         try:
-            resposta_texto = resposta[4:4 + tamanho_resposta].decode('ascii')
+            resposta_texto = response[4:4 + tamanho_resposta].decode('ascii')
         except UnicodeDecodeError:
-            resposta_texto = "<Ops, erro de decodificação>"
+            resposta_numero = struct.unpack('!I', response[4:4 + 4])[0]
+            resposta_texto = str(resposta_numero)
 
         print(f"Tipo de resposta: {tipo_resposta}")
         print(f"Identificador de resposta: {identificador_resposta}")
