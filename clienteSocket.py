@@ -5,7 +5,7 @@ import random
 # Definições de IP e porta do servidor
 SERVER_IP = '15.228.191.109'
 SERVER_PORT = 50000
-SOURCE_IP = '177.37.172.164' # IP de origem do cliente
+SOURCE_IP = '177.37.173.165' # IP de origem do cliente
 
 # Função para criar uma mensagem de requisição
 def create_request(tipo, identificador):
