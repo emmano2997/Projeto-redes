@@ -5,7 +5,7 @@ import random
 # Definições de IP e porta do servidor
 SERVER_IP = '15.228.191.109'
 SERVER_PORT = 50000
-SOURCE_IP = '177.37.173.165' # IP de origem do cliente
+SOURCE_IP = '177.37.172.164' # IP de origem do cliente
 
 # Função para criar uma mensagem de requisição
 def create_request(tipo, identificador):
@@ -14,32 +14,17 @@ def create_request(tipo, identificador):
     request_byte_2 = identificador & 0xFF  # Parte baixa do identificador
     return bytes([request_byte_0, request_byte_1, request_byte_2])
 
-# Função para criar o cabeçalho UDP
-def create_udp_header(src_port, dest_port, length):
-    checksum = 0  # Checksum definido como 0
-    return struct.pack('!HHHH', src_port, dest_port, length, checksum)
-
 # Função para enviar requisição e receber resposta
 def send_request_and_receive_response(tipo):
     identificador = random.randint(1, 65535)  # Identificador aleatório entre 1 e 65535
     request = create_request(tipo, identificador)
 
-    # Cabeçalho UDP
-    src_port = random.randint(1024, 65535)  # Porta de origem aleatória
-    dest_port = SERVER_PORT                  # Porta de destino
-    length = 8 + len(request)                # Comprimento do cabeçalho UDP + payload
-
-    # Cria o cabeçalho UDP
-    udp_header = create_udp_header(src_port, dest_port, length)
-
-    # Combina o cabeçalho UDP e o payload
-    packet = udp_header + request
-
+   
     # Cria o socket UDP
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         sock.settimeout(15)  # Timeout de 15 segundos
         # Envia a requisição para o servidor
-        sock.sendto(packet, (SERVER_IP, SERVER_PORT))
+        sock.sendto(request, (SERVER_IP, SERVER_PORT))
         print(f"Requisição enviada: Tipo {tipo}, Identificador {identificador}")
 
         try:
