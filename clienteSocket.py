@@ -5,7 +5,7 @@ import random
 # Definições de IP e porta do servidor
 SERVER_IP = '15.228.191.109'
 SERVER_PORT = 50000
-SOURCE_IP = '177.37.173.165' # IP de origem do cliente
+SOURCE_IP = '177.37.173.165'  # IP de origem do cliente
 
 # Função para criar uma mensagem de requisição
 def create_request(tipo, identificador):
@@ -19,7 +19,6 @@ def send_request_and_receive_response(tipo):
     identificador = random.randint(1, 65535)  # Identificador aleatório entre 1 e 65535
     request = create_request(tipo, identificador)
 
-   
     # Cria o socket UDP
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         sock.settimeout(15)  # Timeout de 15 segundos
@@ -38,9 +37,10 @@ def send_request_and_receive_response(tipo):
             tamanho_resposta = response[3]
 
             try:
-                resposta_texto = response[4:4+tamanho_resposta].decode('ascii')
+                resposta_texto = response[4:4 + tamanho_resposta].decode('ascii')
             except UnicodeDecodeError:
-                resposta_texto = "<Ops, erro de decodificação>"
+                resposta_numero = struct.unpack('!I', response[4:4 + 4])[0]
+                resposta_texto = str(resposta_numero)
 
             print(f"Tipo de resposta: {tipo_resposta}")
             print(f"Identificador de resposta: {identificador_resposta}")

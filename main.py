@@ -1,66 +1,53 @@
-from scapy.all import IP, UDP, send, Raw
+from scapy.all import IP, UDP, Raw, send
 import struct
-import socket
 
-def build_udp_header(org_port, dest_port, udp_payload):
-    # Definindo tamanho total do UDP (cabeçalho + payload)
-    udp_length = 8 + len(udp_payload)
-
-    # Checksum inicial (será calculado depois)
-    checksum = 0
-
-    # Criando cabeçalho UDP sem o checksum (será adicionado depois)
-    udp_header = struct.pack('!4H', org_port, dest_port, udp_length, checksum)
-
-    return udp_header
-
-def calculate_udp_checksum(org_ip, dest_ip, udp_header, udp_payload):
-    # Construindo o pseudo-cabeçalho IP para o cálculo do checksum
-    pseudo_header = struct.pack(
-        '!4s4sBBH', 
-        socket.inet_aton(org_ip),            # Endereço IP de origem
-        socket.inet_aton(dest_ip),           # Endereço IP de destino
-        0,                                   # Campo reservado
-        socket.IPPROTO_UDP,                  # Protocolo (UDP = 17)
-        len(udp_header) + len(udp_payload)   # Comprimento total do UDP (cabeçalho + payload)
-    )
+# Função para calcular o checksum manualmente
+def calculate_udp_checksum(ip_header, udp_header, payload):
+    # Converte os endereços IP para bytes
+    source_ip = bytes(map(int, ip_header.src.split('.')))
+    dest_ip = bytes(map(int, ip_header.dst.split('.')))
     
-    # Concatenando pseudo-cabeçalho, cabeçalho UDP e payload para o cálculo
-    checksum_data = pseudo_header + udp_header + udp_payload
-    checksum = 0
+    # Construção do pseudo-header
+    pseudo_header = source_ip + dest_ip + struct.pack("!BBH", 0, ip_header.proto, udp_header.len)
     
-    # Somando conjuntos de 2 bytes
-    for i in range(0, len(checksum_data), 2):
-        word = (checksum_data[i] << 8) + (checksum_data[i + 1])
-        checksum += word
-        checksum = (checksum >> 16) + (checksum & 0xFFFF) #wraparound
+    # Cabeçalho UDP com checksum temporariamente 0
+    udp_header_bytes = struct.pack("!HHHH", udp_header.sport, udp_header.dport, udp_header.len, 0)
+    data = pseudo_header + udp_header_bytes + payload
+    
+    # Calcula a soma dos pares de 16 bits (2 bytes)
+    checksum = 0
+    for i in range(0, len(data), 2):
+        part = (data[i] << 8) + (data[i+1] if i+1 < len(data) else 0)
+        checksum += part
 
-    checksum = ~checksum & 0xFFFF  # Complemento de 1 para checksum
+    # Adiciona os valores de carry e faz complemento de 1
+    checksum = (checksum & 0xFFFF) + (checksum >> 16)
+    checksum = ~checksum & 0xFFFF
+
     return checksum
 
-def send_udp_packet(org_ip, dest_ip, org_port, dest_port, payload):
-    # Construindo o cabeçalho UDP
-    udp_payload = payload.encode()
-    udp_header = build_udp_header(org_port, dest_port, udp_payload)
+# Definindo as portas
+org_port = 12345   # Porta de origem
+dest_port = 50000  # Porta de destino
+payload = b'\x02\x5C\xE1'  # Payload de 3 bytes
 
-    # Calculando o checksum UDP
-    checksum = calculate_udp_checksum(org_ip, dest_ip, udp_header, udp_payload)
+# Cabeçalho IP
+ip_header = IP(src='187.64.55.75', dst='15.228.191.109')
 
-    # Atualizando o checksum no cabeçalho UDP
-    udp_header = struct.pack('!4H', org_port, dest_port, 8 + len(udp_payload), checksum)
+# Cabeçalho UDP com checksum inicial 0
+udp_header = UDP(sport=org_port, dport=dest_port, len=8 + len(payload), chksum=0)
 
-    # Criando o pacote IP/UDP com Scapy e adicionando manualmente o cabeçalho UDP
-    packet = IP(src=org_ip, dst=dest_ip) / Raw(load=udp_header + udp_payload)
+# Calculando o checksum UDP
+udp_checksum = calculate_udp_checksum(ip_header, udp_header, payload)
 
-    # Enviando o pacote usando Scapy
-    send(packet)
+# Atualizando o checksum calculado no cabeçalho UDP
+udp_header.chksum = udp_checksum
 
-if __name__ == '__main__':
-    
-    org_ip = '127.0.0.1' #ip do cliente
-    dest_ip = '15.228.191.109'
-    org_port = 12345
-    dest_port = 50000
-    payload = "Hello, World!"
+# Montando o pacote completo
+packet = ip_header / udp_header / Raw(load=payload)
 
-    send_udp_packet(org_ip, dest_ip, org_port, dest_port, payload)
+print("Pacote: ")
+packet.show()
+
+# Opcional: enviar o pacote
+# send(packet)

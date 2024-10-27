@@ -1,4 +1,4 @@
-from scapy.all import *
+from scapy.all import IP, UDP, send, Raw, sniff
 import struct
 import random
 
@@ -96,5 +96,24 @@ def send_request_and_receive_response(tipo):
     else:
         print("Tempo esgotado. Nenhuma resposta recebida do servidor.")
 
-# Teste da função
-send_request_and_receive_response(0)
+# Loop de menu interativo
+while True:
+    print("\nEscolha o tipo de requisição:")
+    print("1. Data e hora atual")
+    print("2. Mensagem motivacional para o fim do semestre")
+    print("3. Quantidade de respostas emitidas pelo servidor")
+    print("4. Sair")
+    
+    opcao = input("Digite a sua escolha: ")
+
+    if opcao == '1':
+        send_request_and_receive_response(0)
+    elif opcao == '2':
+        send_request_and_receive_response(1)
+    elif opcao == '3':
+        send_request_and_receive_response(2)
+    elif opcao == '4':
+        print("Saindo...")
+        break
+    else:
+        print("Opção inválida, tente novamente.")
