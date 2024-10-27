@@ -9,10 +9,38 @@ SERVER_PORT = 50000
 SOURCE_IP = '177.37.172.164' 
 org_port = 12345  # Porta de origem
 
-
+source_ip_bin = struct.pack('!4B', *[int(x) for x in SOURCE_IP.split('.')])
+dest_ip_bin = struct.pack('!4B', *[int(x) for x in SERVER_IP.split('.')])
+        
 def opcoes():
     op = input("Digite a sua escolha: ")
     return int(op)
+
+def checksum_func(pacote):
+    # Verifica se o pacote possui camadas IP e UDP
+    if IP in pacote and UDP in pacote:
+        udp_segment = bytes(pacote[UDP])  # Segmento UDP
+        ip_segment = bytes(pacote[IP])  # Segmento IP
+        
+        # Cabeçalho pseudo para cálculo do checksum
+        pseudo_header = struct.pack('!4s4sBBH', 
+                                    source_ip_bin,  # Endereço de origem
+                                    dest_ip_bin,  # Endereço de destino
+                                    0,                  # Preenchido com 0
+                                    17,                 # Protocolo UDP (17)
+                                    len(udp_segment))   # Comprimento do segmento UDP
+        
+        checksum_data = pseudo_header + udp_segment  # Combina pseudo-header com o UDP segment
+
+        # Calcula o checksum
+        if len(checksum_data) % 2 != 0:  # Adiciona byte nulo se for ímpar
+            checksum_data += b'\x00'
+        
+        checksum = sum(struct.unpack('!%dH' % (len(checksum_data) // 2), checksum_data))
+        checksum = (checksum & 0xFFFF) + (checksum >> 16)  # Adiciona carry bits
+        checksum = ~checksum & 0xFFFF  # Complemento de 1
+        return checksum
+    return 0
 
 def create_request(tipo):
     # Cria a mensagem de requisição
@@ -56,13 +84,16 @@ def calcular_checksum(data):
 def send_request_and_receive_response(tipo):
     # Envia a mensagem e retorna a resposta do servidor
     payload, identificador = create_request(tipo)
-    ip = IP(dst=SERVER_IP)
+    ip = IP(src=SOURCE_IP, dst=SERVER_IP)
     udp = UDP(sport=org_port, dport=SERVER_PORT, len=8 + len(payload))
+    
+    # Cria o pacote com IP, UDP e carga útil
     pacote = ip / udp / Raw(load=payload)
     
-    # Calcula o checksum UDP
-    udp.chksum = udp.chksum  # (Scapy calcula automaticamente, TEM Q SER MANUAL)
+    # Calcula o checksum manualmente
+    udp.chksum = checksum_func(pacote)
     
+    # Envia o pacote e recebe a resposta
     resposta = sr1(pacote, timeout=5)
 
     # Exibe o status da resposta recebida
@@ -84,11 +115,9 @@ def receber_resp(resposta, tipo):
             resposta_texto = conteudo[4:].decode('utf-8')
             print(f"Resposta propriamente dita: {resposta_texto}")
     else:
-        print("Nenhuma resposta recebida.")
+        print("Nenhuma resposta recebida ou resposta não reconhecida.")
 
 while True:
-    resposta = ""
-    
     print("\nEscolha o tipo de requisição:")
     print("1. Data e hora atual")
     print("2. Mensagem motivacional para o fim do semestre")
