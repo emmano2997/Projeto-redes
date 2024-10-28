@@ -101,12 +101,12 @@ def receber_resp(resposta, tipo):
             # Imprime o identificador e o tamanho da resposta
             print(f"Identificador: {identificador}, Tamanho da resposta: {tamanho_resposta}")
 
-            if tipo == 0 or tipo == 1:
-                # Para tipos 0 e 1, lê a resposta propriamente dita
+            if tipo == 1 or tipo == 2:
+                # Para tipos 1 e 2, lê a resposta propriamente dita
                 resposta_propria = conteudo[4:4 + tamanho_resposta].decode('utf-8').rstrip('\0')
                 print(f"Resposta propriamente dita: {resposta_propria}")
             elif tipo == 3:
-                # Para tipo 2, a quantidade de respostas é um inteiro de 4 bytes
+                # Para tipo 3, a quantidade de respostas é um inteiro de 4 bytes
                 if tamanho_resposta == 4:  # Certifique-se de que o tamanho é 4 para tipo 2
                     resposta_texto = int.from_bytes(conteudo[4:8], byteorder='big')
                     print(f"Quantidade de respostas do servidor: {resposta_texto}")
