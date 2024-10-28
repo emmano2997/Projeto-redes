@@ -1,40 +1,55 @@
-#Anna Livia freire e Emmanuel Aprígio
+''' 
+Alunos: Anna Livia Freire e Emmanuel Aprígio
+Matrículas: 20220060424 e 20220060620
 
+'''
 import socket
 import struct
 import random
 
-# Definições de IP e porta do servidor
+'''
+SERVER_IP : IP do servidor
+SERVER_PORT: Porta do servidor
+SOURCE_IP: Ip do cliente
+
+'''
 SERVER_IP = '15.228.191.109'
 SERVER_PORT = 50000
-SOURCE_IP = '177.37.173.165'  # IP de origem do cliente
+SOURCE_IP = '177.37.172.164'  
 
-# Função para criar uma mensagem de requisição
 def create_request(tipo, identificador):
-    request_byte_0 = (0 << 4) | (tipo & 0x0F)  # req/res é 0, tipo é passado na função
-    request_byte_1 = (identificador >> 8) & 0xFF  # Parte alta do identificador
-    request_byte_2 = identificador & 0xFF  # Parte baixa do identificador
+    request_byte_0 = (0 << 4) | (tipo & 0x0F)
+    request_byte_1 = (identificador >> 8) & 0xFF 
+    request_byte_2 = identificador & 0xFF 
     return bytes([request_byte_0, request_byte_1, request_byte_2])
 
-# Função para enviar requisição e receber resposta
+'''
+Criando request como especificado
+o identificador é um número aleatório de 1 a 65535 que mudará a cada request
+
+'''
+
 def send_request_and_receive_response(tipo):
-    identificador = random.randint(1, 65535)  # Identificador aleatório entre 1 e 65535
+    identificador = random.randint(1, 65535)  
     request = create_request(tipo, identificador)
 
-    # Cria o socket UDP
+    '''
+    Cria o socket do tipo UDP
+    AF_INET indica que é um endereço IP
+    SOCK_DGRAM indica que é um socket do tipo UDP
+
+    '''
+
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-        sock.settimeout(15)  # Timeout de 15 segundos
-        # Envia a requisição para o servidor
+        sock.settimeout(15)
         sock.sendto(request, (SERVER_IP, SERVER_PORT))
         print(f"Requisição enviada: Tipo {tipo}, Identificador {identificador}")
 
         try:
-            # Recebe a resposta do servidor
-            response, _ = sock.recvfrom(1024)  # Tamanho máximo da resposta: 1024 bytes
+            response, _ = sock.recvfrom(1024)
             print(f"Resposta recebida (hex): {response.hex()}")
 
-            # Extrai os campos da resposta
-            tipo_resposta = (response[0] >> 4) & 0x0F  # 4 bits de req/res
+            tipo_resposta = (response[0] >> 4) & 0x0F 
             identificador_resposta = (response[1] << 8) | response[2]
             tamanho_resposta = response[3]
 
@@ -48,6 +63,7 @@ def send_request_and_receive_response(tipo):
             print(f"Identificador de resposta: {identificador_resposta}")
             print(f"Tamanho da resposta: {tamanho_resposta}")
             print(f"Resposta propriamente dita: {resposta_texto}")
+
 
         except socket.timeout:
             print("Tempo esgotado. Nenhuma resposta recebida do servidor.")
