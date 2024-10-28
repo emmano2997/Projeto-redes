@@ -1,3 +1,5 @@
+#Anna Livia freire e Emmanuel Aprígio
+
 import socket
 import struct
 import random

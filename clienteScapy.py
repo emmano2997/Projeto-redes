@@ -3,10 +3,10 @@ import random
 import struct
 import socket
 
-# Configuração do IP e da porta do servidor
+# Configura o IP e a porta do servidor
 SERVER_IP = '15.228.191.109'
 SERVER_PORT = 50000
-SOURCE_IP = '177.37.173.165' 
+SOURCE_IP = '177.37.172.164' 
 org_port = 12345  # Porta de origem
 
 def opcoes():
@@ -54,39 +54,30 @@ def calcular_checksum(data):
 def send_request_and_receive_response(tipo):
     # Envia a mensagem e retorna a resposta do servidor
     payload, identificador = create_request(tipo)
-    ip = IP(src=SOURCE_IP, dst=SERVER_IP)
+    ip = IP(dst=SERVER_IP)
+    
+    # Monta o pacote UDP
     udp = UDP(sport=org_port, dport=SERVER_PORT, len=8 + len(payload))
-    
-    # Definindo o payload e o tamanho do UDP
-    tamanho_udp = 8 + len(payload)
-    
-    # Criar o pseudocabeçalho
-    pseudocabecalho = criar_pseudocabecalho(SOURCE_IP, SERVER_IP, 17, tamanho_udp)
-    
-    # Calcular o checksum UDP manualmente
-    udp_chksum_manual = calcular_checksum(pseudocabecalho + bytes(udp) + payload)
-    print(f"Checksum UDP calculado manualmente: {udp_chksum_manual:04X}")
-    
-    # Atribuir o checksum manual ao campo UDP
-    udp.chksum = udp_chksum_manual
-    
-    # Montar o pacote
     pacote = ip / udp / Raw(load=payload)
-
-    # Verificar o pacote com checksum calculado manualmente
-    pacote.show()
-
-    # Calcular o checksum automático do pacote
-    udp_chksum_auto = pacote[UDP].chksum
-    print(f"Checksum UDP calculado automaticamente: {udp_chksum_auto:04X}")
-
-    # Comparação dos checksums
-    if udp_chksum_manual == udp_chksum_auto:
-        print("Os checksums são iguais.")
-    else:
-        print("Os checksums são diferentes.")
-
-    # Enviar o pacote e esperar a resposta
+    
+    # Calcula o checksum UDP manualmente
+    udp_length = 8 + len(payload)
+    pseudocabecalho = criar_pseudocabecalho(SOURCE_IP, SERVER_IP, socket.IPPROTO_UDP, udp_length)
+    checksum_manual = calcular_checksum(
+        pseudocabecalho + bytes(pacote[UDP]) + bytes(pacote[Raw])
+    )
+    
+    # Atribui o checksum calculado manualmente
+    udp.chksum = checksum_manual
+    
+    # Atribui o checksum calculado automaticamente pelo Scapy
+    checksum_scapy = udp.chksum
+    
+    # Imprime os checksums
+    print(f"Checksum calculado manualmente: {checksum_manual:#04x}")
+    print(f"Checksum calculado automaticamente pelo Scapy: {checksum_scapy:#04x}")
+    
+    # Envia o pacote e espera pela resposta
     resposta = sr1(pacote, timeout=5)
 
     # Exibe o status da resposta recebida
@@ -101,14 +92,31 @@ def receber_resp(resposta, tipo):
     # Processa a resposta recebida com base na opção
     if resposta and Raw in resposta:
         conteudo = resposta[Raw].load
-        if tipo == 3:
-            resposta_texto = int.from_bytes(conteudo[4:], byteorder='big')
-            print(f"Quantidade de respostas emitidas pelo servidor: {resposta_texto}")
+        
+        # Verifica se o primeiro byte indica que é uma resposta
+        if (conteudo[0] & 0x10) == 0x10:  # Verifica se é uma resposta
+            identificador = (conteudo[1] << 8) | conteudo[2]  # Identificador
+            tamanho_resposta = conteudo[3]  # Tamanho da resposta
+            
+            # Imprime o identificador e o tamanho da resposta
+            print(f"Identificador: {identificador}, Tamanho da resposta: {tamanho_resposta}")
+
+            if tipo == 0 or tipo == 1:
+                # Para tipos 0 e 1, lê a resposta propriamente dita
+                resposta_propria = conteudo[4:4 + tamanho_resposta].decode('utf-8').rstrip('\0')
+                print(f"Resposta propriamente dita: {resposta_propria}")
+            elif tipo == 3:
+                # Para tipo 2, a quantidade de respostas é um inteiro de 4 bytes
+                if tamanho_resposta == 4:  # Certifique-se de que o tamanho é 4 para tipo 2
+                    resposta_texto = int.from_bytes(conteudo[4:8], byteorder='big')
+                    print(f"Quantidade de respostas do servidor: {resposta_texto}")
+                else:
+                    print("Tamanho inválido para a quantidade de respostas.")
         else:
-            resposta_texto = conteudo[4:].decode('utf-8')
-            print(f"Resposta propriamente dita: {resposta_texto}")
+            print("Recebida resposta inválida do servidor.")
     else:
         print("Nenhuma resposta recebida.")
+
 
 while True:
     resposta = ""
